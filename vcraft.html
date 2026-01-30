@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VERA-CRAFT | Mundo de Élite</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+        #ui { position: absolute; top: 10px; left: 10px; color: #0095ff; text-shadow: 0 0 5px #000; pointer-events: none; }
+        .crosshair { position: absolute; top: 50%; left: 50%; color: #0095ff; transform: translate(-50%, -50%); font-size: 24px; pointer-events: none; }
+        canvas { display: block; }
+        .btns { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 20px; }
+        .btn { width: 70px; height: 70px; background: rgba(0, 149, 255, 0.2); border: 2px solid #0095ff; color: white; border-radius: 10px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div id="ui">VERA-CRAFT v1.0<br>WASD para mover | Click para construir</div>
+    <div class="crosshair">+</div>
+    
+    <div class="btns">
+        <button class="btn" onclick="mover('W')">AVANZAR</button>
+        <button class="btn" onclick="mover('S')">ATRÁS</button>
+        <button class="btn" onclick="build()">PONER BLOQUE</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0e14);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Luz Azul de Élite
+        const light = new THREE.PointLight(0x0095ff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // Crear Suelo de Cubos
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        for(let x = -5; x < 5; x++) {
+            for(let z = -5; z < 5; z++) {
+                const material = new THREE.MeshStandardMaterial({ color: 0x004466, wireframe: true });
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(x, -1, z);
+                scene.add(cube);
+            }
+        }
+
+        camera.position.z = 5;
+        camera.position.y = 1;
+
+        function build() {
+            const material = new THREE.MeshStandardMaterial({ color: 0x0095ff, emissive: 0x004466 });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set(Math.round(camera.position.x), Math.round(camera.position.y - 1), Math.round(camera.position.z - 2));
+            scene.add(cube);
+        }
+
+        function mover(dir) {
+            if(dir === 'W') camera.position.z -= 0.5;
+            if(dir === 'S') camera.position.z += 0.5;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
