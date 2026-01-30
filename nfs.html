@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VERA | NFS Edition</title>
+    <style>
+        body { background: #000; color: #0095ff; font-family: sans-serif; margin: 0; overflow: hidden; text-align: center; }
+        canvas { display: block; background: #050505; margin: auto; box-shadow: 0 0 30px #0095ff; max-width: 100%; height: auto; }
+        .hud { position: absolute; top: 10px; width: 100%; font-weight: bold; text-shadow: 0 0 10px #0095ff; pointer-events: none; }
+        .controles { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; }
+        .btn { width: 80px; height: 80px; background: rgba(0, 149, 255, 0.2); border: 2px solid #0095ff; color: #fff; border-radius: 50%; font-size: 30px; }
+    </style>
+</head>
+<body>
+    <div class="hud">VELOCIDAD: <span id="speed">0</span> KM/H<br>PUNTOS: <span id="score">0</span></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="controles">
+        <button class="btn" ontouchstart="mover(-1)" onmousedown="mover(-1)">←</button>
+        <button class="btn" ontouchstart="mover(1)" onmousedown="mover(1)">→</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = 400; canvas.height = 600;
+
+        let carPos = 0; let speed = 0; let score = 0;
+        let obstacles = [];
+        let gameActive = true;
+
+        function mover(dir) { if(gameActive) carPos += dir * 20; }
+
+        function createObstacle() {
+            if (Math.random() < 0.05) {
+                obstacles.push({ x: Math.random() * 300 + 50, y: -50, w: 40, h: 70 });
+            }
+        }
+
+        function drawRoad() {
+            ctx.fillStyle = "#111"; ctx.fillRect(0, 0, 400, 600);
+            ctx.strokeStyle = "#0095ff"; ctx.lineWidth = 5;
+            ctx.setLineDash([20, 20]); ctx.lineDashOffset = -speed * 5;
+            ctx.beginPath(); ctx.moveTo(200, 0); ctx.lineTo(200, 600); ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function update() {
+            if(!gameActive) return;
+            speed = Math.min(speed + 0.1, 180);
+            score++;
+            document.getElementById("speed").innerText = Math.floor(speed);
+            document.getElementById("score").innerText = score;
+
+            createObstacle();
+            obstacles.forEach((obs, i) => {
+                obs.y += speed / 10;
+                if (obs.y > 600) obstacles.splice(i, 1);
+                // Colisión
+                if (obs.y + obs.h > 500 && obs.y < 570 && Math.abs((obs.x-20) - (200 + carPos)) < 30) {
+                    gameActive = false;
+                    alert("¡Choque! Tu record: " + score);
+                    location.reload();
+                }
+            });
+        }
+
+        function draw() {
+            drawRoad();
+            // Dibujar Auto (Jugador)
+            ctx.fillStyle = "#0095ff"; ctx.shadowBlur = 20; ctx.shadowColor = "#0095ff";
+            ctx.fillRect(180 + carPos, 500, 40, 70);
+            // Dibujar Obstáculos
+            ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 5;
+            obstacles.forEach(obs => ctx.fillRect(obs.x - 20, obs.y, obs.w, obs.h));
+            ctx.shadowBlur = 0;
+        }
+
+        function loop() { update(); draw(); requestAnimationFrame(loop); }
+        loop();
+
+        window.addEventListener("keydown", e => {
+            if(e.key === "ArrowLeft") mover(-1);
+            if(e.key === "ArrowRight") mover(1);
+        });
+    </script>
+</body>
+</html>
